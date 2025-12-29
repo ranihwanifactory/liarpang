@@ -1,40 +1,35 @@
 
-import { GoogleGenAI, Type } from "@google/genai";
-
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 export const fetchWordsByCategory = async (categoryName: string): Promise<string[]> => {
-  try {
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: `초등학생들이 알만한 '${categoryName}' 카테고리의 단어들을 20개 정도 추천해줘.`,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            words: {
-              type: Type.ARRAY,
-              items: { type: Type.STRING },
-              description: "초등학생 수준의 단어 리스트",
-            },
-          },
-          required: ["words"],
-        },
-      },
-    });
+  // Static word lists for kids
+  const wordDatabase: Record<string, string[]> = {
+    '동물 친구들': [
+      '강아지', '고양이', '호랑이', '사자', '기린', '코끼리', '토끼', '다람쥐', '펭귄', '판다', 
+      '하마', '악어', '원숭이', '얼룩말', '곰', '여우', '늑대', '캥거루', '고래', '상어'
+    ],
+    '맛있는 음식': [
+      '떡볶이', '피자', '치킨', '햄버거', '탕수육', '자장면', '김밥', '라면', '돈가스', '샌드위치', 
+      '아이스크림', '삼겹살', '비빔밥', '스파게티', '스테이크', '초밥', '붕어빵', '호떡', '튀김'
+    ],
+    '학교 물건': [
+      '연필', '지우개', '공책', '필통', '가방', '칠판', '분필', '실내화', '교과서', '자', 
+      '가위', '풀', '색연필', '스케치북', '책상', '의자', '컴퓨터', '시계', '지구본'
+    ],
+    '달콤한 과일': [
+      '사과', '바나나', '포도', '수박', '딸기', '메론', '귤', '키위', '복숭아', '참외', 
+      '파인애플', '체리', '망고', '감', '배', '블루베리', '오렌지', '자두', '레몬'
+    ],
+    '재미있는 장소': [
+      '학교', '놀이터', '수영장', '놀이공원', '도서관', '박물관', '병원', '소방서', '경찰서', '공항', 
+      '기차역', '동물원', '영화관', '백화점', '마트', '바다', '산', '공원', '은행'
+    ],
+    '신나는 운동': [
+      '축구', '농구', '야구', '배구', '피구', '태권도', '수영', '육상', '배드민턴', '테니스', 
+      '골프', '탁구', '스케이트', '스키', '발레', '줄넘기', '철봉', '달리기', '자전거'
+    ],
+  };
 
-    const data = JSON.parse(response.text);
-    return data.words || [];
-  } catch (error) {
-    console.error("Gemini API Error:", error);
-    // Fallback static words if API fails
-    const fallbacks: Record<string, string[]> = {
-      '동물 친구들': ['강아지', '고양이', '호랑이', '사자', '기린', '코끼리', '토끼', '다람쥐', '펭귄', '판다'],
-      '맛있는 음식': ['떡볶이', '피자', '치킨', '햄버거', '탕수육', '자장면', '김밥', '라면', '돈가스', '샌드위치'],
-      '학교 물건': ['연필', '지우개', '공책', '필통', '가방', '칠판', '분필', '실내화', '교과서', '자'],
-      'default': ['사과', '바나나', '포도', '수박', '딸기', '메론', '귤', '키위', '복숭아', '참외']
-    };
-    return fallbacks[categoryName] || fallbacks['default'];
-  }
+  // Simulate network delay for better UX (loading states)
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  return wordDatabase[categoryName] || wordDatabase['동물 친구들'];
 };
