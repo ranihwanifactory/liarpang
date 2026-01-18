@@ -3,7 +3,7 @@ import React, { useState, useCallback, useEffect } from 'react';
 import { GameState, GameStep, Player, Category } from './types';
 import { CATEGORIES, MIN_PLAYERS, MAX_PLAYERS } from './constants';
 import { fetchWordsByCategory } from './services/geminiService';
-import { Button, Card, Title, Badge } from './components/UI';
+import { Button, Card, Title, Badge, VoiceButton } from './components/UI';
 
 const App: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>({
@@ -22,6 +22,7 @@ const App: React.FC = () => {
   });
 
   const [newPlayerName, setNewPlayerName] = useState('');
+  const [liarGuess, setLiarGuess] = useState('');
   const [timer, setTimer] = useState(60);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
 
@@ -30,9 +31,9 @@ const App: React.FC = () => {
     console.log(`Sound: ${type}`);
   };
 
-  const addPlayer = () => {
+  const addPlayer = (nameOverride?: string) => {
     if (gameState.players.length >= MAX_PLAYERS) return;
-    const name = newPlayerName.trim() || `플레이어 ${gameState.players.length + 1}`;
+    const name = (nameOverride || newPlayerName).trim() || `플레이어 ${gameState.players.length + 1}`;
     setGameState(prev => ({
       ...prev,
       players: [...prev.players, {
@@ -104,11 +105,13 @@ const App: React.FC = () => {
   };
 
   const handleLiarGuess = (word: string) => {
-    if (word.trim() === gameState.targetWord) {
+    const finalGuess = word || liarGuess;
+    if (finalGuess.trim() === gameState.targetWord) {
       setGameState(prev => ({ ...prev, step: 'RESULT', winner: 'LIAR' }));
     } else {
       setGameState(prev => ({ ...prev, step: 'RESULT', winner: 'CITIZENS' }));
     }
+    setLiarGuess('');
   };
 
   const resetGame = () => {
@@ -123,6 +126,7 @@ const App: React.FC = () => {
       caughtLiarId: null,
     }));
     setIsTimerRunning(false);
+    setLiarGuess('');
   };
 
   // Timer Effect
@@ -167,7 +171,11 @@ const App: React.FC = () => {
                 onChange={(e) => setNewPlayerName(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && addPlayer()}
               />
-              <Button onClick={addPlayer} className="px-4 py-2 text-base">추가</Button>
+              <VoiceButton onResult={(text) => {
+                setNewPlayerName(text);
+                setTimeout(() => addPlayer(text), 500);
+              }} />
+              <Button onClick={() => addPlayer()} className="px-4 py-2 text-base">추가</Button>
             </div>
 
             <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto p-2 border-2 border-dashed border-yellow-100 rounded-xl">
@@ -292,18 +300,29 @@ const App: React.FC = () => {
             <h2 className="text-2xl font-bold text-center">라이어를 찾았어요!<br/><span className="text-red-500">마지막 기회</span>를 드립니다.</h2>
             <p className="text-gray-600">제시어가 무엇인지 맞춰보세요!</p>
             
-            <input
-              type="text"
-              placeholder="정답은 무엇일까?"
-              className="w-full bg-gray-50 border-2 border-yellow-300 rounded-2xl px-6 py-4 text-2xl font-bold text-center focus:outline-none"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleLiarGuess((e.target as HTMLInputElement).value);
-              }}
-            />
+            <div className="w-full flex gap-2">
+              <input
+                type="text"
+                placeholder="정답은 무엇일까?"
+                className="flex-grow bg-gray-50 border-2 border-yellow-300 rounded-2xl px-6 py-4 text-2xl font-bold text-center focus:outline-none"
+                value={liarGuess}
+                onChange={(e) => setLiarGuess(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleLiarGuess(liarGuess);
+                }}
+              />
+              <VoiceButton onResult={(text) => {
+                setLiarGuess(text);
+                setTimeout(() => handleLiarGuess(text), 1000);
+              }} className="h-full px-5" />
+            </div>
 
-            <Button onClick={() => handleLiarGuess('')} variant="ghost" className="text-sm">
-              모르겠어요 (포기)
-            </Button>
+            <div className="flex gap-2 w-full">
+              <Button onClick={() => handleLiarGuess(liarGuess)} className="flex-grow">정답 확인!</Button>
+              <Button onClick={() => handleLiarGuess('')} variant="ghost" className="text-sm">
+                포기
+              </Button>
+            </div>
           </Card>
         )}
 
