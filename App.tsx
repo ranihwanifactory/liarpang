@@ -337,7 +337,18 @@ const App: React.FC = () => {
         )}
       </main>
 
-      <footer className="mt-6 text-center text-gray-400 text-sm">
+      {/* Daum AdFit Area */}
+      <div className="my-6 flex justify-center overflow-hidden min-h-[100px]">
+        <ins 
+          className="kakao_ad_area" 
+          style={{ display: 'none' }}
+          data-ad-unit="DAN-bgwlPp8PA9x2x4dc" 
+          data-ad-width="320" 
+          data-ad-height="100"
+        ></ins>
+      </div>
+
+      <footer className="mb-6 text-center text-gray-400 text-sm">
         © 2024 우당탕탕 라이어 게임 - 친구와 함께 즐겨요!
       </footer>
     </div>
